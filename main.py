@@ -121,28 +121,33 @@ def request_overpass(query):
     return response.text
 
 
-bs = Bs(open('map3.osm', 'rb').read(), "lxml-xml")
+# bs = Bs(open('map3.osm', 'rb').read(), "lxml-xml")
+# bounds = bs.select('bounds')[0]
+# west = float(bounds['minlon'])
+# south = float(bounds['minlat'])
+# east = float(bounds['maxlon'])
+# north = float(bounds['maxlat'])
 
-bounds = bs.select('bounds')[0]
-west = float(bounds['minlon'])
-south = float(bounds['minlat'])
-east = float(bounds['maxlon'])
-north = float(bounds['maxlat'])
-zoom = 15
+west, south, north, east = 37.5805, 55.7296, 55.7759, 37.6615
+zoom = 14
 
 map_image = get_map(west, south, east, north, zoom)
 
 # Get data from overpass
-query = f'[out:xml]; node["highway"="bus_stop"] ({south},{west},{north}, {east}); out;'
+query = f'[out:xml]; node["amenity"="cafe"] ({south},{west},{north}, {east}); out;'
 res_xml = request_overpass(query)
+bs = Bs(res_xml, "lxml-xml")
 
-api = overpy.Overpass()
-res_overpy = api.parse_xml(res_xml)
+with open('data/map.xml', 'wt', encoding='utf-8') as f:
+    f.write(res_xml)
 
 # Paint something
 ctx = Context(map_image)
-for cafe_coords in res_overpy.nodes:
-    x, y = transform_coords(map_image, cafe_coords.lon.__float__(), cafe_coords.lat.__float__())
+
+nodes = bs.select('node tag[k="cuisine"][v="coffee_shop"]')
+for node in nodes:
+    node_x, node_y = float(node.parent.get('lon')), float(node.parent.get('lat'))
+    x, y = transform_coords(map_image, node_x, node_y)
     ctx.set_source_rgb(255, 0, 0)
     ctx.arc(x, y, 3, 0, 2 * math.pi)
     ctx.stroke()

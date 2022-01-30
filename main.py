@@ -4,10 +4,10 @@ import random
 from math import cos
 
 import mercantile
+from overpy import Overpass
 import requests
 from bs4 import BeautifulSoup as Bs
 from cairo import ImageSurface, FORMAT_ARGB32, Context
-
 
 D_LAT = 111134.861111
 D_LON = 111321.377778
@@ -124,26 +124,16 @@ def request_overpass(query):
     return response.text
 
 
-def test_run():
-    west, south, north, east = 37.5805, 55.7296, 55.7759, 37.6615
-    zoom = 14
+def paint(bbox, osm_data):
+    south, west, north, east = [float(el) for el in bbox.split(',')]
+    zoom = 15
 
     map_image = get_map(west, south, east, north, zoom)
 
-    # Get data from overpass
-    query = f'[out:xml]; node["amenity"="cafe"] ({south},{west},{north}, {east}); out;'
-    res_xml = request_overpass(query)
-    bs = Bs(res_xml, "lxml-xml")
-
-    with open('data/map.xml', 'wt', encoding='utf-8') as f:
-        f.write(res_xml)
-
-    # Paint something
     ctx = Context(map_image)
-
-    nodes = bs.select('node tag[k="cuisine"][v="coffee_shop"]')
+    nodes = osm_data.select('node')
     for node in nodes:
-        node_x, node_y = float(node.parent.get('lon')), float(node.parent.get('lat'))
+        node_x, node_y = float(node.get('lon')), float(node.get('lat'))
         x, y = transform_coords(map_image, [west, south, north, east], node_x, node_y)
         ctx.set_source_rgb(255, 0, 0)
         ctx.arc(x, y, 3, 0, 2 * math.pi)
@@ -154,29 +144,60 @@ def test_run():
 
 
 def get_bbox(lat, lon, radius):
-    west = lon - round(radius / (D_LON * cos(D_LON)), 5)
     south = lat - round(radius / D_LAT, 5)
+    west = lon - round(radius / (D_LON * abs(cos(D_LON))), 5)
     north = lat + round(radius / D_LAT, 5)
-    east = lon + round(radius / (D_LON * cos(D_LON)), 5)
-    return west, south, north, east
-
-TAGS_FOOD = ['cafe', 'fast_food', 'food_court', 'ice_cream', 'restaurant']
-TAGS_DRINK = ['bar', 'biergarten', 'pub']
-TAGS_EDUCATION = ['kindergarten', 'language_school', 'music_school', 'school']
-TAGS_TRANSPORT_COMMON = ['bus_station', 'taxi']
-TAGS_TRANSPORT_PRIVATE = ['parking', 'parking_space', 'car_wash']
-TAGS_FINANCE = ['atm', 'bank']
-TAGS_HEALTH = ['clinic', 'dentist', 'hospital', 'pharmacy', 'veterinary']
-TAGS_ENTERTAINMENT = ['arts_centre', 'cinema', 'theatre']
-SHOP_SIZES = ['department_store', 'mall', 'supermarket', 'convenience']  # shop = ?
+    east = lon + round(radius / (D_LON * abs(cos(D_LON))), 5)
+    return f'{south}, {west}, {north}, {east}'
 
 
-# test_run()
+def create_query(bbox, tags, is_multiple_search=False):
+    if not is_multiple_search:
+        tags = [tags]
+    search_part = []
+    for base_tag, search_tags in tags:
+        for tag in search_tags:
+            search_part.append(f'node["{base_tag}"="{tag}"]({bbox});')
+    query = f'[out:xml]; ({" ".join(search_part)}); out;'
+    return query
+
+
+TAGS_FOOD = ['amenity', ['cafe', 'fast_food', 'food_court', 'restaurant']]
+TAGS_DRINK = ['amenity', ['bar', 'biergarten', 'pub']]
+TAGS_EDUCATION = ['amenity', ['kindergarten', 'school']]
+TAGS_PUBLIC_TRANSPORT = ['public_transport', ['stop_position', 'platform', 'station', 'stop_area']]
+TAGS_PERSONAL_TRANSPORT = ['amenity', ['parking', 'parking_space', 'car_wash']]
+TAGS_FINANCE = ['amenity', ['atm', 'bank']]
+TAGS_HOSPITAL = ['amenity', ['clinic', 'hospital']]
+TAGS_PHARMACY = ['amenity', ['pharmacy']]
+TAGS_ENTERTAINMENT = ['amenity', ['arts_centre', 'cinema', 'theatre']]
+SHOP_MALL = ['amenity', ['department_store', 'mall']]
+SHOP_SUPERMARKET = ['amenity', ['supermarket']]
+SHOP_SMALLSHOP = ['amenity', ['convenience']]
 
 
 lat = 55.704722
 lon = 37.926944
-r = 500
-bbox = get_bbox(lat, lon, r)
+range = 500
+bbox = get_bbox(lat, lon, range)
 
-print(bbox)
+item = {'food': TAGS_FOOD,
+        'education': TAGS_EDUCATION,
+        'public_transport': TAGS_PUBLIC_TRANSPORT,
+        'personal_transport': TAGS_PERSONAL_TRANSPORT,
+        'finance': TAGS_FINANCE,
+        'medicine': TAGS_HOSPITAL,
+        'pharmacy': TAGS_PHARMACY,
+        'entertainment': TAGS_ENTERTAINMENT,
+        'malls': SHOP_MALL,
+        'supermarkets': SHOP_SUPERMARKET,
+        'small_shops': SHOP_SMALLSHOP}
+
+query = create_query(bbox, list(item.values()), is_multiple_search=True)
+xml = request_overpass(query)
+bs = Bs(xml, "lxml-xml")
+
+paint(bbox, bs)
+
+with open('data/map.xml', 'wt', encoding='utf-8') as f:
+    f.write(xml)

@@ -4,10 +4,10 @@ import random
 from math import cos
 
 import mercantile
-from overpy import Overpass
 import requests
 from bs4 import BeautifulSoup as Bs
 from cairo import ImageSurface, FORMAT_ARGB32, Context
+from geopy.geocoders import Nominatim
 
 D_LAT = 111134.861111
 D_LON = 111321.377778
@@ -162,6 +162,14 @@ def create_query(bbox, tags, is_multiple_search=False):
     return query
 
 
+def select_nodes_by_tags(bs, tags):
+    base_tag, search_tags = tags
+    nodes = []
+    for tag in search_tags:
+        nodes.extend([t.parent for t in bs.select(f'tag[k="{base_tag}"][v="{tag}"]')])
+    return nodes
+
+
 TAGS_FOOD = ['amenity', ['cafe', 'fast_food', 'food_court', 'restaurant']]
 TAGS_DRINK = ['amenity', ['bar', 'biergarten', 'pub']]
 TAGS_EDUCATION = ['amenity', ['kindergarten', 'school']]
@@ -171,13 +179,17 @@ TAGS_FINANCE = ['amenity', ['atm', 'bank']]
 TAGS_HOSPITAL = ['amenity', ['clinic', 'hospital']]
 TAGS_PHARMACY = ['amenity', ['pharmacy']]
 TAGS_ENTERTAINMENT = ['amenity', ['arts_centre', 'cinema', 'theatre']]
-SHOP_MALL = ['amenity', ['department_store', 'mall']]
-SHOP_SUPERMARKET = ['amenity', ['supermarket']]
-SHOP_SMALLSHOP = ['amenity', ['convenience']]
+SHOP_MALL = ['shop', ['department_store', 'mall']]
+SHOP_SUPERMARKET = ['shop', ['supermarket']]
+SHOP_SMALLSHOP = ['shop', ['convenience']]
 
-
-lat = 55.704722
-lon = 37.926944
+address = "Люберцы Барыкина 4"
+geolocator = Nominatim(user_agent='Krayushkin app')
+location = geolocator.geocode(address)
+if not location:
+    print('No such location')
+lat = location.latitude
+lon = location.longitude
 range = 500
 bbox = get_bbox(lat, lon, range)
 
@@ -186,7 +198,6 @@ item = {'food': TAGS_FOOD,
         'public_transport': TAGS_PUBLIC_TRANSPORT,
         'personal_transport': TAGS_PERSONAL_TRANSPORT,
         'finance': TAGS_FINANCE,
-        'medicine': TAGS_HOSPITAL,
         'pharmacy': TAGS_PHARMACY,
         'entertainment': TAGS_ENTERTAINMENT,
         'malls': SHOP_MALL,
@@ -201,3 +212,13 @@ paint(bbox, bs)
 
 with open('data/map.xml', 'wt', encoding='utf-8') as f:
     f.write(xml)
+
+for el, tags in item.items():
+    nodes = select_nodes_by_tags(bs, tags)
+    count = len(nodes)
+    names = [n.select('tag[k="name"]')[0].get('v') for n in nodes if n.select('tag[k="name"]')]
+    names = list(set(names))
+    item[el] = [count, names]
+
+# TODO: Add processing of ways
+# TODO: Add highways for public transport

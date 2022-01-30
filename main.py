@@ -1,14 +1,16 @@
 import io
 import math
 import random
-import overpy
-
-
+from math import cos
 
 import mercantile
 import requests
 from bs4 import BeautifulSoup as Bs
 from cairo import ImageSurface, FORMAT_ARGB32, Context
+
+
+D_LAT = 111134.861111
+D_LON = 111321.377778
 
 
 def get_map(west, south, east, north, zoom):
@@ -82,7 +84,8 @@ def get_map(west, south, east, north, zoom):
     return map_image_clipped
 
 
-def transform_coords(map: ImageSurface, lon, lat):
+def transform_coords(map: ImageSurface, coords, lon, lat):
+    west, south, north, east = coords
     # рассчитываем координаты углов в веб-меркаоторе
     leftTop = mercantile.xy(west, north)
     rightBottom = mercantile.xy(east, south)
@@ -121,39 +124,59 @@ def request_overpass(query):
     return response.text
 
 
-# bs = Bs(open('map3.osm', 'rb').read(), "lxml-xml")
-# bounds = bs.select('bounds')[0]
-# west = float(bounds['minlon'])
-# south = float(bounds['minlat'])
-# east = float(bounds['maxlon'])
-# north = float(bounds['maxlat'])
+def test_run():
+    west, south, north, east = 37.5805, 55.7296, 55.7759, 37.6615
+    zoom = 14
 
-west, south, north, east = 37.5805, 55.7296, 55.7759, 37.6615
-zoom = 14
+    map_image = get_map(west, south, east, north, zoom)
 
-map_image = get_map(west, south, east, north, zoom)
+    # Get data from overpass
+    query = f'[out:xml]; node["amenity"="cafe"] ({south},{west},{north}, {east}); out;'
+    res_xml = request_overpass(query)
+    bs = Bs(res_xml, "lxml-xml")
 
-# Get data from overpass
-query = f'[out:xml]; node["amenity"="cafe"] ({south},{west},{north}, {east}); out;'
-res_xml = request_overpass(query)
-bs = Bs(res_xml, "lxml-xml")
+    with open('data/map.xml', 'wt', encoding='utf-8') as f:
+        f.write(res_xml)
 
-with open('data/map.xml', 'wt', encoding='utf-8') as f:
-    f.write(res_xml)
+    # Paint something
+    ctx = Context(map_image)
 
-# Paint something
-ctx = Context(map_image)
+    nodes = bs.select('node tag[k="cuisine"][v="coffee_shop"]')
+    for node in nodes:
+        node_x, node_y = float(node.parent.get('lon')), float(node.parent.get('lat'))
+        x, y = transform_coords(map_image, [west, south, north, east], node_x, node_y)
+        ctx.set_source_rgb(255, 0, 0)
+        ctx.arc(x, y, 3, 0, 2 * math.pi)
+        ctx.stroke()
 
-nodes = bs.select('node tag[k="cuisine"][v="coffee_shop"]')
-for node in nodes:
-    node_x, node_y = float(node.parent.get('lon')), float(node.parent.get('lat'))
-    x, y = transform_coords(map_image, node_x, node_y)
-    ctx.set_source_rgb(255, 0, 0)
-    ctx.arc(x, y, 3, 0, 2 * math.pi)
-    ctx.stroke()
-
-with open("map.png", "wb") as f:
-    map_image.write_to_png(f)
+    with open("data/map.png", "wb") as f:
+        map_image.write_to_png(f)
 
 
+def get_bbox(lat, lon, radius):
+    west = lon - round(radius / (D_LON * cos(D_LON)), 5)
+    south = lat - round(radius / D_LAT, 5)
+    north = lat + round(radius / D_LAT, 5)
+    east = lon + round(radius / (D_LON * cos(D_LON)), 5)
+    return west, south, north, east
 
+TAGS_FOOD = ['cafe', 'fast_food', 'food_court', 'ice_cream', 'restaurant']
+TAGS_DRINK = ['bar', 'biergarten', 'pub']
+TAGS_EDUCATION = ['kindergarten', 'language_school', 'music_school', 'school']
+TAGS_TRANSPORT_COMMON = ['bus_station', 'taxi']
+TAGS_TRANSPORT_PRIVATE = ['parking', 'parking_space', 'car_wash']
+TAGS_FINANCE = ['atm', 'bank']
+TAGS_HEALTH = ['clinic', 'dentist', 'hospital', 'pharmacy', 'veterinary']
+TAGS_ENTERTAINMENT = ['arts_centre', 'cinema', 'theatre']
+SHOP_SIZES = ['department_store', 'mall', 'supermarket', 'convenience']  # shop = ?
+
+
+# test_run()
+
+
+lat = 55.704722
+lon = 37.926944
+r = 500
+bbox = get_bbox(lat, lon, r)
+
+print(bbox)

@@ -1,0 +1,5 @@
+geopy~=2.2.0
+mercantile~=1.2.1
+requests~=2.26.0
+beautifulsoup4~=4.10.0
+pycairo~=1.20.1

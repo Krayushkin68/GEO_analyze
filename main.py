@@ -131,7 +131,7 @@ def paint(bbox, osm_data):
     map_image = get_map(west, south, east, north, zoom)
 
     ctx = Context(map_image)
-    nodes = osm_data.select('node')
+    nodes = [el.parent for el in osm_data.select('node tag')]
     for node in nodes:
         node_x, node_y = float(node.get('lon')), float(node.get('lat'))
         x, y = transform_coords(map_image, [west, south, north, east], node_x, node_y)
@@ -151,14 +151,13 @@ def get_bbox(lat, lon, radius):
     return f'{south}, {west}, {north}, {east}'
 
 
-def create_query(bbox, tags, is_multiple_search=False):
-    if not is_multiple_search:
-        tags = [tags]
+def create_query(bbox, tags):
     search_part = []
     for base_tag, search_tags in tags:
         for tag in search_tags:
             search_part.append(f'node["{base_tag}"="{tag}"]({bbox});')
-    query = f'[out:xml]; ({" ".join(search_part)}); out;'
+            search_part.append(f'way["{base_tag}"="{tag}"]({bbox});')
+    query = f'[out:xml]; ({" ".join(search_part)}); (._;>;); out;'
     return query
 
 
@@ -173,7 +172,8 @@ def select_nodes_by_tags(bs, tags):
 TAGS_FOOD = ['amenity', ['cafe', 'fast_food', 'food_court', 'restaurant']]
 TAGS_DRINK = ['amenity', ['bar', 'biergarten', 'pub']]
 TAGS_EDUCATION = ['amenity', ['kindergarten', 'school']]
-TAGS_PUBLIC_TRANSPORT = ['public_transport', ['stop_position', 'platform', 'station', 'stop_area']]
+TAGS_PUBLIC_TRANSPORT_ROAD = ['highway', ['bus_stop', 'platform']]
+TAGS_PUBLIC_TRANSPORT_STATIONS = ['public_transport', ['bus_stop', 'stop_position', 'platform', 'station', 'stop_area']]
 TAGS_PERSONAL_TRANSPORT = ['amenity', ['parking', 'parking_space', 'car_wash']]
 TAGS_FINANCE = ['amenity', ['atm', 'bank']]
 TAGS_HOSPITAL = ['amenity', ['clinic', 'hospital']]
@@ -183,7 +183,8 @@ SHOP_MALL = ['shop', ['department_store', 'mall']]
 SHOP_SUPERMARKET = ['shop', ['supermarket']]
 SHOP_SMALLSHOP = ['shop', ['convenience']]
 
-address = "Люберцы Барыкина 4"
+# address = "Люберцы Барыкина 4"
+address = "Москва, улица Молдагуловой, д. 8к1"
 geolocator = Nominatim(user_agent='Krayushkin app')
 location = geolocator.geocode(address)
 if not location:
@@ -195,7 +196,7 @@ bbox = get_bbox(lat, lon, range)
 
 item = {'food': TAGS_FOOD,
         'education': TAGS_EDUCATION,
-        'public_transport': TAGS_PUBLIC_TRANSPORT,
+        'public_transport': TAGS_PUBLIC_TRANSPORT_ROAD,
         'personal_transport': TAGS_PERSONAL_TRANSPORT,
         'finance': TAGS_FINANCE,
         'pharmacy': TAGS_PHARMACY,
@@ -204,7 +205,7 @@ item = {'food': TAGS_FOOD,
         'supermarkets': SHOP_SUPERMARKET,
         'small_shops': SHOP_SMALLSHOP}
 
-query = create_query(bbox, list(item.values()), is_multiple_search=True)
+query = create_query(bbox, list(item.values()))
 xml = request_overpass(query)
 bs = Bs(xml, "lxml-xml")
 
@@ -220,5 +221,3 @@ for el, tags in item.items():
     names = list(set(names))
     item[el] = [count, names]
 
-# TODO: Add processing of ways
-# TODO: Add highways for public transport

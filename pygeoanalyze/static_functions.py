@@ -29,10 +29,11 @@ def get_bbox(lat, lon, radius):
     north = round(max(lat - r_lat, lat + r_lat), 5)
     west = round(min(lon - r_lon, lon + r_lon), 5)
     east = round(max(lon - r_lon, lon + r_lon), 5)
-    return f'{south}, {west}, {north}, {east}'
+    return [south, west, north, east]
 
 
 def create_query(bbox, tags):
+    bbox = ','.join([str(el) for el in bbox])
     search_part = []
     for base_tag, search_tags in tags:
         for tag in search_tags:

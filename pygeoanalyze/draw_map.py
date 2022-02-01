@@ -73,7 +73,7 @@ def transform_coords(map_img: ImageSurface, coords, lon, lat):
 
 
 def draw(bbox, data: Bs, output_filename="data/map.png"):
-    south, west, north, east = [float(el) for el in bbox.split(',')]
+    south, west, north, east = bbox
     zoom = 15
 
     map_image = get_map(west, south, east, north, zoom)

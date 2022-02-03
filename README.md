@@ -1,3 +1,4 @@
+
 # OSM Analyze
 > ### The project is under development
 
@@ -9,19 +10,22 @@
 
 
 ## Example
-    from pygeoanalyze import Infrastructure
-    
-    inf = Infrastructure(address='Люберцы, Барыкина 8', search_range=800)
-    if inf.analyze():
-        print(inf.received_info)
-        inf.save_to_xml('data/map.xml')
-        inf.draw_map('data/map.png')
-    
-    inf = Infrastructure(lat=55.706315, lon=37.771571, search_range=800)
-    if inf.analyze():
-        print(inf.received_info)
-        inf.save_to_xml('data/map2.xml')
-        inf.draw_map('data/map2.png')
+    from pygeoanalyze import Infrastructure  
+    import json  
+      
+    TOKEN = json.load(open('token.json', 'rt')).get('TOKEN')  
+      
+    inf_osm = Infrastructure(address='Люберцы, Барыкина 8', search_range=800, source='OSM')  
+    if inf_osm.analyze():  
+        print(inf_osm.received_info)  
+        inf_osm.save_to_xml('data/map.xml')  
+        inf_osm.draw_map('data/map.png')  
+      
+    inf_ya = Infrastructure(address='Люберцы, Барыкина 8', search_range=500, source='Yandex', token=TOKEN)  
+    if inf_ya.analyze():  
+        print(inf_ya.received_info)  
+        inf_ya.draw_map('data/map_ya.png')
+
 		
 ### Result info
 Dictionary containing the number of objects found in the category and their names (if any)
@@ -40,5 +44,5 @@ Dictionary containing the number of objects found in the category and their name
     }
 
 ### Result map
-![map](https://user-images.githubusercontent.com/71232265/151858409-176051aa-8e22-4b6b-a502-d5f1291d1689.png)
+![map_ya](https://user-images.githubusercontent.com/71232265/152334291-abd196b9-39d0-4daf-8574-e68fd56361ec.png)
 

@@ -1,1 +1,1 @@
-from pygeoanalyze.osm_analyzer import Infrastructure
+from pygeoanalyze.main_analyzer import Infrastructure

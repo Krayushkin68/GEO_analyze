@@ -72,16 +72,15 @@ def transform_coords(map_img: ImageSurface, coords, lon, lat):
     return x, y
 
 
-def draw(bbox, data: Bs, output_filename="data/map.png"):
+def draw(bbox, nodes, output_filename="data/map.png"):
     south, west, north, east = bbox
     zoom = 15
 
     map_image = get_map(west, south, east, north, zoom)
 
     ctx = Context(map_image)
-    nodes = [el.parent for el in data.select('node tag')]
-    for node in nodes:
-        node_x, node_y = float(node.get('lon')), float(node.get('lat'))
+    for node_x, node_y in nodes:
+        node_x, node_y = float(node_x), float(node_y)
         x, y = transform_coords(map_image, [west, south, north, east], node_x, node_y)
         ctx.set_source_rgb(255, 0, 0)
         ctx.arc(x, y, 3, 0, 2 * math.pi)

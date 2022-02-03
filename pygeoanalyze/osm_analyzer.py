@@ -1,24 +1,15 @@
-import os
-
 from geopy.geocoders import Nominatim
 
 from pygeoanalyze.draw_map import draw
-from pygeoanalyze.static_functions import *
+from pygeoanalyze.osm_functions import *
 
 
-class Infrastructure:
-    def __init__(self, address=None, lat=None, lon=None, search_range=500):
+class OSMAnalyzer:
+    def __init__(self):
         self.address = str()
         self.lat = float()
         self.lon = float()
-        self.search_range = search_range
-        if address:
-            self.set_address(address)
-        if lat and lon:
-            self.set_coordinates(lat, lon)
-        if search_range != 500:
-            self.set_search_range(search_range)
-
+        self.search_range = int()
         self.request_info = {'food': TAGS_FOOD,
                              'education': TAGS_EDUCATION,
                              'public_transport': TAGS_PUBLIC_TRANSPORT_ROAD,
@@ -37,17 +28,10 @@ class Infrastructure:
         self.address = address
 
     def set_coordinates(self, lat: float, lon: float):
-        if not (isinstance(lat, float) or isinstance(lon, float)):
-            raise TypeError('Coordinates must be float')
-        if not (round(lat) in range(-90, 91) or round(lon) in range(-180, 181)):
-            raise ValueError('Latitude should be from -90 to 90 degrees. '
-                             'Longitude should be from -180 to 180 degrees.')
         self.lat = lat
         self.lon = lon
 
     def set_search_range(self, search_range: int):
-        if not isinstance(search_range, int):
-            raise TypeError('Search range must be int')
         self.search_range = search_range
 
     def analyze(self):
@@ -68,28 +52,13 @@ class Infrastructure:
         self._received_data = request_overpass(self._bbox, self.request_info)
         if self._received_data:
             self.received_info = analyze_response(self._received_data, self.request_info)
-            return True if self.received_info else False
+            return self.received_info
         return False
 
     def save_to_xml(self, output_filename):
-        if not self._received_data:
-            raise RuntimeError('Data is empty. Try run .analyze() method.')
-        try:
-            if os.path.dirname(output_filename) and not os.path.exists(os.path.dirname(output_filename)):
-                os.makedirs(os.path.dirname(output_filename))
-            with open(output_filename, "wt", encoding='utf-8') as f:
-                f.write(str(self._received_data))
-        except Exception as e:
-            print(e)
-            return False
+        with open(output_filename, "wt", encoding='utf-8') as f:
+            f.write(str(self._received_data))
 
     def draw_map(self, output_filename):
-        if not self._received_data:
-            raise RuntimeError('Data is empty. Try run .analyze() method.')
-        try:
-            if os.path.dirname(output_filename) and not os.path.exists(os.path.dirname(output_filename)):
-                os.makedirs(os.path.dirname(output_filename))
-            draw(self._bbox, self._received_data, output_filename)
-        except Exception as e:
-            print(e)
-            return False
+        nodes = [[el.parent.get('lon'), el.parent.get('lat')] for el in self._received_data.select('node tag')]
+        draw(self._bbox, nodes, output_filename)

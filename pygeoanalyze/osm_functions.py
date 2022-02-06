@@ -85,11 +85,19 @@ def request_overpass(bbox, item):
         return False
 
 
-def analyze_response(data, item):
-    for el, tags in item.items():
+def analyze_response(data, received_data):
+    received_info = {}
+    received_info_json = []
+    for key, tags in received_data.items():
         nodes = select_nodes_by_tags(data, tags)
-        count = len(nodes)
-        names = [n.select('tag[k="name"]')[0].get('v') for n in nodes if n.select('tag[k="name"]')]
-        names = list(set(names))
-        item[el] = [count, names]
-    return item
+        names = []
+        json_data = []
+        for n in nodes:
+            if n.select('tag[k="name"]'):
+                name = n.select('tag[k="name"]')[0].get('v')
+                coords = [n.get('lat'), n.get('lon')]
+                json_data.append({'name': name, 'address': None, 'coordinates': coords})
+                names.append(name)
+        received_info[key] = [len(nodes), list(set(names))]
+        received_info_json.append({'category': key, 'count': len(json_data), 'items': json_data})
+    return received_info, received_info_json

@@ -24,6 +24,18 @@ class YandexAnalyzer:
                              'small_shops': ['Магазин']}
         self.received_info = dict()
         self.received_info_coords = dict()
+        self.received_info_json = []
+        self._bbox = None
+        self._received_data = None
+
+    def clear(self):
+        self.lat = float()
+        self.lon = float()
+        self.address = str()
+        self.search_range = 500
+        self.received_info = dict()
+        self.received_info_coords = dict()
+        self.received_info_json = []
         self._bbox = None
         self._received_data = None
 
@@ -53,8 +65,8 @@ class YandexAnalyzer:
 
         request_result = request_all_info(self._bbox, self.request_info, self._token)
         if request_result:
-            self.received_info, self.received_info_coords = request_result
-            return self.received_info
+            self.received_info, self.received_info_coords, self.received_info_json = request_result
+            return self.received_info, self.received_info_json
         return False
 
     def save_to_xml(self, output_filename):

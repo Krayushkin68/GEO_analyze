@@ -21,6 +21,17 @@ class OSMAnalyzer:
                              'supermarkets': SHOP_SUPERMARKET,
                              'small_shops': SHOP_SMALLSHOP}
         self.received_info = dict()
+        self.received_info_json = []
+        self._bbox = None
+        self._received_data = None
+
+    def clear(self):
+        self.lat = float()
+        self.lon = float()
+        self.address = str()
+        self.search_range = 500
+        self.received_info = dict()
+        self.received_info_json = []
         self._bbox = None
         self._received_data = None
 
@@ -51,8 +62,8 @@ class OSMAnalyzer:
         self._bbox = get_bbox(self.lat, self.lon, self.search_range)
         self._received_data = request_overpass(self._bbox, self.request_info)
         if self._received_data:
-            self.received_info = analyze_response(self._received_data, self.request_info)
-            return self.received_info
+            self.received_info, self.received_info_json = analyze_response(self._received_data, self.request_info)
+            return self.received_info, self.received_info_json
         return False
 
     def save_to_xml(self, output_filename):

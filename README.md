@@ -1,8 +1,8 @@
 
-# OSM Analyze
+# GEO Analyze
 > ### The project is under development
 
-### Small package for retrieving data from Open Street Map services.
+### Small package for retrieving data from Open Street Map and Yandex Maps API services.
 ## Allows to:
 ### - Retrieve information about the infrastructure of an object in a given radius around it
 ### - Save this information in osm(xml) format

@@ -42,13 +42,13 @@ Json containing the number, names,  and coordinates of found objects grouped by 
       "items": [  
          {  
            "name": "Жан Руа",  
-	       "address": "Вертолётная ул., 4/2, Люберцы, Россия",  
-	       "coordinates": [37.958793, 55.706957]  
+           "address": "Вертолётная ул., 4/2, Люберцы, Россия",  
+           "coordinates": [37.958793, 55.706957]  
          },  
          {  
            "name": "СтритФуд",  
-	       "address": "ул. Барыкина, 2, Люберцы, Россия",  
-	       "coordinates": [37.955729, 55.707104]  
+           "address": "ул. Барыкина, 2, Люберцы, Россия",  
+           "coordinates": [37.955729, 55.707104]  
          },  
 	      ...  
         ]  
@@ -59,15 +59,15 @@ Json containing the number, names,  and coordinates of found objects grouped by 
       "items": [  
          {  
            "name": "Средняя общеобразовательная школа № 28",  
-	       "address": "Вертолётная ул., 8, Люберцы, Россия",  
-	       "coordinates": [37.960052, 55.706352]  
+           "address": "Вертолётная ул., 8, Люберцы, Россия",  
+           "coordinates": [37.960052, 55.706352]  
          },  
 	     {  
            "name": "Детский сад на Барыкина",  
-		   "address": "ул. Барыкина, 6, Люберцы, Россия",  
-	       "coordinates": [37.957828, 55.707228]  
+           "address": "ул. Барыкина, 6, Люберцы, Россия",  
+           "coordinates": [37.957828, 55.707228]  
          },  
-		    ...  
+	      ...  
         ]  
       },
       ...  

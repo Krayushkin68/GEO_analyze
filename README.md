@@ -5,8 +5,10 @@
 ### Small package for retrieving data from Open Street Map and Yandex Maps API services.
 ## Allows to:
 ### - Retrieve information about the infrastructure of an object in a given radius around it
-### - Save this information in osm(xml) format
+### - Save this information in osm(xml) and json formats
 ### - Obtain an image of the study area with infrastructure elements marked on it
+
+**Note.** To use the Yandex analyzer, you need to get an API token.
 
 
 ## Example
@@ -18,30 +20,58 @@
     inf_osm = Infrastructure(address='Люберцы, Барыкина 8', search_range=800, source='OSM')  
     if inf_osm.analyze():  
         print(inf_osm.received_info)  
-        inf_osm.save_to_xml('data/map.xml')  
-        inf_osm.draw_map('data/map.png')  
+        inf_osm.save_to_xml('data/map_osm.xml')  
+        inf_osm.save_to_json('data/map_osm.json')  
+        inf_osm.draw_map('data/map_osm.png')  
       
     inf_ya = Infrastructure(address='Люберцы, Барыкина 8', search_range=500, source='Yandex', token=TOKEN)  
     if inf_ya.analyze():  
         print(inf_ya.received_info)  
+        inf_ya.save_to_json('data/map_ya.json')  
         inf_ya.draw_map('data/map_ya.png')
+
 
 		
 ### Result info
-Dictionary containing the number of objects found in the category and their names (if any)
+Json containing the number, names,  and coordinates of found objects grouped by categories
 
-    {
-    'food': [4, ['Пират пицца', 'Суши Фреш', 'Буханка', 'Venue']],
-    'education': [5, ['Самолётик', 'Детский сад №15 «Бригантина»', 'Школа № 28', 'Детство']],
-    'public_transport': [16, ['С/т Зенино', 'Улица Лавриненко', 'Зенинское шоссе', ...]],
-    'personal_transport': [13, ['AquaService']],
-    'finance': [3, ['Сбербанк']],
-    'pharmacy': [7, ['Планета здоровья', 'Планета Здоровья', 'Социальная аптека', ...]],
-    'entertainment': [0, []],
-    'malls': [0, []],
-    'supermarkets': [6, ['Винлаб', 'Магнит', 'Первым делом', 'Дикси', 'Пятёрочка']],
-    'small_shops': [8, ['Гурман', 'ВкусВилл', 'Продукты', 'Минимаркет']]
-    }
+    [  
+      {  
+      "category": "food",  
+      "count": 6,  
+      "items": [  
+         {  
+           "name": "Жан Руа",  
+           "address": "Вертолётная ул., 4/2, Люберцы, Россия",  
+           "coordinates": [37.958793, 55.706957]  
+         },  
+         {  
+           "name": "СтритФуд",  
+           "address": "ул. Барыкина, 2, Люберцы, Россия",  
+           "coordinates": [37.955729, 55.707104]  
+         },  
+	      ...  
+        ]  
+      },  
+      {  
+      "category": "education",  
+      "count": 10,  
+      "items": [  
+         {  
+           "name": "Средняя общеобразовательная школа № 28",  
+           "address": "Вертолётная ул., 8, Люберцы, Россия",  
+           "coordinates": [37.960052, 55.706352]  
+         },  
+	     {  
+           "name": "Детский сад на Барыкина",  
+           "address": "ул. Барыкина, 6, Люберцы, Россия",  
+           "coordinates": [37.957828, 55.707228]  
+         },  
+	      ...  
+        ]  
+      },
+      ...  
+    ]
 
 ### Result map
 ![map_ya](https://user-images.githubusercontent.com/71232265/152334291-abd196b9-39d0-4daf-8574-e68fd56361ec.png)

@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 from pygeoanalyze.osm_analyzer import OSMAnalyzer
 from pygeoanalyze.yandex_analyzer import YandexAnalyzer
 
@@ -18,8 +19,7 @@ class Infrastructure:
         if search_range:
             self.set_search_range(search_range)
 
-        self.received_info = dict()
-        self.received_info_json = []
+        self.received_info = []
 
     def set_address(self, address):
         self.analyzer.set_address(address)
@@ -40,13 +40,12 @@ class Infrastructure:
     def analyze(self):
         result = self.analyzer.analyze()
         if result:
-            self.received_info, self.received_info_json = result
+            self.received_info = result
             return True
         return False
 
     def clear(self):
-        self.received_info = dict()
-        self.received_info_json = []
+        self.received_info = []
         self.analyzer.clear()
 
     def save_to_xml(self, output_filename):
@@ -61,12 +60,12 @@ class Infrastructure:
             return False
 
     def save_to_json(self, output_filename):
-        if not self.received_info_json:
+        if not self.received_info:
             raise RuntimeError('Data is empty. Try run .analyze() method.')
         try:
             if os.path.dirname(output_filename) and not os.path.exists(os.path.dirname(output_filename)):
                 os.makedirs(os.path.dirname(output_filename))
-            json.dump(self.received_info_json, open(output_filename, 'wt', encoding='utf-8'), ensure_ascii=False, indent=4)
+            json.dump(self.received_info, open(output_filename, 'wt', encoding='utf-8'), ensure_ascii=False, indent=4)
         except Exception as e:
             print(e)
             return False

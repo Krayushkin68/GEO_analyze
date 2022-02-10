@@ -43,17 +43,13 @@ def request_yandex(request_text, token, bbox=None, is_address_search=False):
 
 
 def parse_response(data):
-    names = []
-    coords = []
-    json_data = []
+    res_data = []
     for obj in data['features']:
         name = obj['properties']['name']
         coord = obj['geometry']['coordinates']
         address = obj['properties']['description']
-        json_data.append({'name': name, 'address': address, 'coordinates': coord})
-        names.append(name)
-        coords.append(coord)
-    return names, coords, json_data
+        res_data.append({'name': name, 'address': address, 'coordinates': coord})
+    return res_data
 
 
 def get_coords_by_address(address, token):
@@ -65,23 +61,15 @@ def get_coords_by_address(address, token):
 
 
 def request_all_info(bbox, request_info, token):
-    received_info = {}
-    received_info_coords = {}
+    # TODO: Add asynchronous calls
     received_info_json = []
     for key, val in request_info.items():
-        result_names = []
-        result_coords = []
         result_json = []
         for el in val:
-            result = request_yandex(request_text=el, bbox=bbox, token=token)
-            if result:
-                names, coords, json_data = result
-                result_names.extend(names)
-                result_coords.extend(coords)
-                result_json.extend(json_data)
+            el_data = request_yandex(request_text=el, bbox=bbox, token=token)
+            if isinstance(el_data, list):
+                result_json.extend(el_data)
             else:
                 return False
-        received_info[key] = [len(result_names), list(set(result_names))]
-        received_info_coords[key] = [result_coords]
-        received_info_json.append({'category': key, 'count': len(json_data), 'items': json_data})
-    return received_info, received_info_coords, received_info_json
+        received_info_json.append({'category': key, 'count': len(el_data), 'items': el_data})
+    return received_info_json

@@ -7,7 +7,6 @@ TOKEN = json.load(open('token.json', 'rt')).get('TOKEN')
 inf_osm = Infrastructure(address='Люберцы, Барыкина 8', search_range=800, source='OSM')
 if inf_osm.analyze():
     print(inf_osm.received_info)
-    print(inf_osm.received_info_json)
     inf_osm.save_to_xml('data/map_osm.xml')
     inf_osm.save_to_json('data/map_osm.json')
     inf_osm.draw_map('data/map_osm.png')
@@ -15,10 +14,8 @@ if inf_osm.analyze():
 inf_ya = Infrastructure(address='Люберцы, Барыкина 8', search_range=500, source='Yandex', token=TOKEN)
 if inf_ya.analyze():
     print(inf_ya.received_info)
-    print(inf_ya.received_info_json)
     inf_ya.save_to_json('data/map_ya.json')
     inf_ya.draw_map('data/map_ya.png')
-
 
 interested_addresses = [
     'Москва, ул. Юных Ленинцев 38',
@@ -31,6 +28,6 @@ data = dict().fromkeys(interested_addresses)
 for addr in interested_addresses:
     inf.set_address(addr)
     if inf.analyze():
-        data[addr] = inf.received_info_json
+        data[addr] = inf.received_info
     inf.clear()
 json.dump(data, open('data/interested_data.json', 'wt', encoding='utf-8'), ensure_ascii=False, indent=4)

@@ -3,6 +3,9 @@ from pygeoanalyze.osm_functions import get_bbox
 from pygeoanalyze.yandex_functions import *
 
 
+# TODO: Add PROXY and TOKEN mixers
+
+
 class YandexAnalyzer:
     def __init__(self, token):
         if not token:
@@ -23,8 +26,6 @@ class YandexAnalyzer:
                              'supermarkets': ['Супермаркет'],
                              'small_shops': ['Магазин']}
         self.received_info = dict()
-        self.received_info_coords = dict()
-        self.received_info_json = []
         self._bbox = None
         self._received_data = None
 
@@ -34,8 +35,6 @@ class YandexAnalyzer:
         self.address = str()
         self.search_range = 500
         self.received_info = dict()
-        self.received_info_coords = dict()
-        self.received_info_json = []
         self._bbox = None
         self._received_data = None
 
@@ -65,8 +64,8 @@ class YandexAnalyzer:
 
         request_result = request_all_info(self._bbox, self.request_info, self._token)
         if request_result:
-            self.received_info, self.received_info_coords, self.received_info_json = request_result
-            return self.received_info, self.received_info_json
+            self.received_info = request_result
+            return self.received_info
         return False
 
     def save_to_xml(self, output_filename):
@@ -74,6 +73,7 @@ class YandexAnalyzer:
 
     def draw_map(self, output_filename):
         nodes = []
-        for el in self.received_info_coords.values():
-            nodes.extend(el[0])
+        for category in self.received_info:
+            for item in category['items']:
+                nodes.append(item['coordinates'])
         draw(self._bbox, nodes, output_filename)

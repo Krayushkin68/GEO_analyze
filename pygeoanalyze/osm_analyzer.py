@@ -20,8 +20,7 @@ class OSMAnalyzer:
                              'malls': SHOP_MALL,
                              'supermarkets': SHOP_SUPERMARKET,
                              'small_shops': SHOP_SMALLSHOP}
-        self.received_info = dict()
-        self.received_info_json = []
+        self.received_info = []
         self._bbox = None
         self._received_data = None
 
@@ -30,8 +29,7 @@ class OSMAnalyzer:
         self.lon = float()
         self.address = str()
         self.search_range = 500
-        self.received_info = dict()
-        self.received_info_json = []
+        self.received_info = []
         self._bbox = None
         self._received_data = None
 
@@ -62,8 +60,8 @@ class OSMAnalyzer:
         self._bbox = get_bbox(self.lat, self.lon, self.search_range)
         self._received_data = request_overpass(self._bbox, self.request_info)
         if self._received_data:
-            self.received_info, self.received_info_json = analyze_response(self._received_data, self.request_info)
-            return self.received_info, self.received_info_json
+            self.received_info = analyze_response(self._received_data, self.request_info)
+            return self.received_info
         return False
 
     def save_to_xml(self, output_filename):
@@ -71,5 +69,9 @@ class OSMAnalyzer:
             f.write(str(self._received_data))
 
     def draw_map(self, output_filename):
-        nodes = [[el.parent.get('lon'), el.parent.get('lat')] for el in self._received_data.select('node tag')]
+        nodes = []
+        for category in self.received_info:
+            for item in category['items']:
+                if item['coordinates'][0]:
+                    nodes.append(item['coordinates'])
         draw(self._bbox, nodes, output_filename)

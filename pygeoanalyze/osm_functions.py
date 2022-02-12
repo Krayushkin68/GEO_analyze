@@ -3,6 +3,8 @@ from math import cos
 import requests
 from bs4 import BeautifulSoup as Bs
 
+from pygeoanalyze.yandex_functions import prepare_proxy
+
 D_LAT = 111134.861111
 D_LON = 111321.377778
 
@@ -51,8 +53,9 @@ def select_nodes_by_tags(bs, tags):
     return nodes
 
 
-def request_overpass(bbox, item):
+def request_overpass(bbox, item, proxies):
     query = create_query(bbox, list(item.values()))
+    proxy = prepare_proxy(proxies, 'requests')
 
     useragent = 'Krayushkin_OSM'
     headers = {
@@ -72,7 +75,7 @@ def request_overpass(bbox, item):
 
     data = {'data': query}
     try:
-        response = requests.post('https://overpass-api.de/api/interpreter', headers=headers, data=data)
+        response = requests.post('https://overpass-api.de/api/interpreter', headers=headers, data=data, proxies=proxy)
         if response.status_code == 200:
             bs = Bs(response.text, "lxml-xml")
             return bs

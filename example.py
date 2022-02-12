@@ -2,10 +2,12 @@ import json
 
 from pygeoanalyze import Infrastructure
 
-TOKEN = json.load(open('token.json', 'rt')).get('TOKEN')
+TOKENS = json.load(open('token.json', 'rt')).get('TOKEN')
+# Valid values: TOKENS = 'some_token' or TOKENS = ['some_token_1', some_token_2, ...]
 
 # EXAMPLE 1
 inf_osm = Infrastructure(address='Люберцы, Барыкина 8', search_range=800, source=Infrastructure.sources.OSM)
+inf_osm.add_proxies(['http://1.2.3.4:1234', 'http://2.3.4.5:2345'])
 if inf_osm.analyze():
     print(inf_osm.received_info)
     inf_osm.save_to_xml('data/map_osm.xml')
@@ -14,7 +16,8 @@ if inf_osm.analyze():
 
 # EXAMPLE 2
 inf_ya = Infrastructure(address='Люберцы, Барыкина 8', search_range=500, source=Infrastructure.sources.Yandex,
-                        token=TOKEN)
+                        token=TOKENS)
+inf_ya.add_proxies(['http://1.2.3.4:1234', 'http://2.3.4.5:2345'])
 if inf_ya.analyze():
     print(inf_ya.received_info)
     inf_ya.save_to_json('data/map_ya.json')
@@ -27,7 +30,7 @@ interested_addresses = [
     'Москва, Нижегородская улица, 13А',
     'Москва, Рабочая улица, 6к1'
 ]
-inf = Infrastructure(source=Infrastructure.sources.Yandex, token=TOKEN, search_range=500)
+inf = Infrastructure(source=Infrastructure.sources.Yandex, token=TOKENS, search_range=500)
 data = dict().fromkeys(interested_addresses)
 for addr in interested_addresses:
     inf.set_address(addr)

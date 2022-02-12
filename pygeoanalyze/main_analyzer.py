@@ -52,6 +52,9 @@ class Infrastructure:
             raise TypeError('Search range must be int')
         self.analyzer.set_search_range(search_range)
 
+    def add_proxies(self, proxies):
+        self.analyzer.add_proxies(proxies)
+
     def analyze(self):
         result = self.analyzer.analyze()
         if result:

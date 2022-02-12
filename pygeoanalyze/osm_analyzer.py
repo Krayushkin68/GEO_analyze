@@ -2,6 +2,7 @@ from geopy.geocoders import Nominatim
 
 from pygeoanalyze.draw_map import draw
 from pygeoanalyze.osm_functions import *
+from pygeoanalyze.yandex_functions import get_valid_proxies
 
 
 class OSMAnalyzer:
@@ -10,6 +11,7 @@ class OSMAnalyzer:
         self.lat = float()
         self.lon = float()
         self.search_range = int()
+        self._proxies = []
         self.request_info = {'food': TAGS_FOOD,
                              'education': TAGS_EDUCATION,
                              'public_transport': TAGS_PUBLIC_TRANSPORT_ROAD,
@@ -43,6 +45,12 @@ class OSMAnalyzer:
     def set_search_range(self, search_range: int):
         self.search_range = search_range
 
+    def add_proxies(self, proxies):
+        if isinstance(proxies, str):
+            self._proxies.append(proxies)
+        elif isinstance(proxies, list):
+            self._proxies.extend(proxies)
+
     def analyze(self):
         if not (self.address or (self.lat and self.lon)):
             raise Exception('Need to specify address or coordinates. Use ".set_address()" or ".set_coordinates()"')
@@ -58,7 +66,9 @@ class OSMAnalyzer:
                                     'Please specify another address or use coordinates.')
 
         self._bbox = get_bbox(self.lat, self.lon, self.search_range)
-        self._received_data = request_overpass(self._bbox, self.request_info)
+
+        proxies = get_valid_proxies(self._proxies)
+        self._received_data = request_overpass(self._bbox, self.request_info, proxies)
         if self._received_data:
             self.received_info = analyze_response(self._received_data, self.request_info)
             return self.received_info

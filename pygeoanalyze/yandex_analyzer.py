@@ -1,9 +1,8 @@
+import random
+
 from pygeoanalyze.draw_map import draw
 from pygeoanalyze.osm_functions import get_bbox
 from pygeoanalyze.yandex_functions import *
-
-
-# TODO: Add PROXY and TOKEN mixers
 
 
 class YandexAnalyzer:
@@ -11,6 +10,7 @@ class YandexAnalyzer:
         if not token:
             raise ValueError('Need to specify API TOKEN to use Yandex Maps API.')
         self._token = token
+        self._proxies = []
         self.address = str()
         self.lat = float()
         self.lon = float()
@@ -48,11 +48,25 @@ class YandexAnalyzer:
     def set_search_range(self, search_range: int):
         self.search_range = search_range
 
+    def add_proxies(self, proxies):
+        if isinstance(proxies, str):
+            self._proxies.append(proxies)
+        elif isinstance(proxies, list):
+            self._proxies.extend(proxies)
+
     def analyze(self):
         if not (self.address or (self.lat and self.lon)):
             raise Exception('Need to specify address or coordinates. Use ".set_address()" or ".set_coordinates()"')
+
+        valid_tokens = get_valid_token(self._token)
+        if not valid_tokens:
+            raise Exception('No valid token provided')
+        valid_token = random.choice(valid_tokens)
+
+        proxies = get_valid_proxies(self._proxies)
+
         if self.address:
-            location = get_coords_by_address(self.address, self._token)
+            location = get_coords_by_address(self.address, valid_token, proxies)
             if location:
                 self.lat, self.lon = location
             else:
@@ -62,7 +76,7 @@ class YandexAnalyzer:
 
         self._bbox = get_bbox(self.lat, self.lon, self.search_range)
 
-        request_result = request_all_info_async(self._bbox, self.request_info, self._token)
+        request_result = request_all_info_async(self._bbox, self.request_info, valid_token, proxies)
         if request_result:
             self.received_info = request_result
             return self.received_info

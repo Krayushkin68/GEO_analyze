@@ -1,15 +1,105 @@
 import asyncio
+import random
 from collections import defaultdict
 
 import aiohttp
 import requests
 
 
-def get_coords_by_address(address, token):
+async def check_proxy(proxy, session):
+    try:
+        async with session.get('https://httpbin.org/get', proxy=proxy, timeout=1) as response:
+            if response.status == 200:
+                return proxy
+    except Exception:
+        return None
+
+
+async def check_proxies(proxies):
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for proxy in proxies:
+            tasks.append(check_proxy(proxy, session))
+        responses = await asyncio.gather(*tasks)
+    valid_proxies = [el for el in responses if el]
+    return valid_proxies
+
+
+def get_valid_proxies(proxies):
+    valid_proxies = None
+    if proxies:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        valid_proxies = asyncio.run(check_proxies(proxies))
+    return valid_proxies
+
+
+def prepare_proxy(proxies, target):
+    if not proxies:
+        return None
+
+    proxy = random.choice(proxies)
+    if target == 'requests':
+        requests_proxy = None
+        if proxy.startswith('http'):
+            requests_proxy = {'http': proxy}
+        elif proxy.startswith('https'):
+            requests_proxy = {'https': proxy}
+        return requests_proxy
+    else:
+        return proxy
+
+
+async def check_token(token, session):
+    try:
+        url, params, headers = prepare_request(request_text='Тест', token=token, is_address_search=True)
+        async with session.get(url, params=params, headers=headers, timeout=1) as response:
+            if response.status == 200:
+                data = await response.json()
+                if not (data.get('message') and data.get('message') == 'Invalid key'):
+                    return token
+    except Exception:
+        return None
+
+
+async def check_tokens(tokens):
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for token in tokens:
+            tasks.append(check_token(token, session))
+        responses = await asyncio.gather(*tasks)
+    valid_tokens = [el for el in responses if el]
+    return valid_tokens
+
+
+def get_valid_token(tokens):
+    valid_tokens = None
+    if tokens:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        valid_tokens = asyncio.run(check_tokens(tokens))
+    return valid_tokens
+    # tokens = [token] if isinstance(token, str) else token
+    # for token in tokens:
+    #     try:
+    #         url, params, headers = prepare_request(request_text='Тест', token=token, is_address_search=True)
+    #         response = requests.get(url, params=params, headers=headers)
+    #         data = response.json()
+    #         if data.get('message') and data.get('message') == 'Invalid key':
+    #             continue
+    #         else:
+    #             return token
+    #     except Exception:
+    #         continue
+    # else:
+    #     return False
+
+
+def get_coords_by_address(address, token, proxies):
     call = prepare_request(request_text=address, token=token, is_address_search=True)
     if call:
         url, params, headers = call
-        response = requests.get(url, params=params, headers=headers)
+
+        proxy = prepare_proxy(proxies, 'requests')
+        response = requests.get(url, params=params, headers=headers, proxies=proxy)
         data = response.json()
 
         if data.get('message') and data.get('message') == 'Invalid key':
@@ -59,21 +149,22 @@ def process_response(data):
     return request_key, res_data
 
 
-def prepare_async_calls(session, bbox, request_info, token):
+def prepare_async_calls(session, bbox, request_info, token, proxies):
     calls = []
+    proxy = prepare_proxy(proxies, 'aiohttp')
     for val in request_info.values():
         for el in val:
             call = prepare_request(request_text=el, bbox=bbox, token=token)
             if call:
                 url, params, headers = call
-                calls.append(session.get(url=url, params=params, headers=headers))
+                calls.append(session.get(url=url, params=params, headers=headers, proxy=proxy, ssl=False))
     return calls
 
 
-async def make_async_calls(bbox, request_info, token):
+async def make_async_calls(bbox, request_info, token, proxies):
     results = []
     async with aiohttp.ClientSession() as session:
-        tasks = prepare_async_calls(session, bbox, request_info, token)
+        tasks = prepare_async_calls(session, bbox, request_info, token, proxies)
         responses = await asyncio.gather(*tasks)
         for response in responses:
             results.append(await response.json())
@@ -86,12 +177,9 @@ def cleanup_info(data):
             data['small_shops'].remove(item)
 
 
-def request_all_info_async(bbox, request_info, token):
+def request_all_info_async(bbox, request_info, token, proxies):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    responses = asyncio.run(make_async_calls(bbox, request_info, token))
-
-    import pickle
-    pickle.dump(responses, open('data/data.pkl', 'wb'))
+    responses = asyncio.run(make_async_calls(bbox, request_info, token, proxies))
 
     received_info = defaultdict(lambda: [])
     for response in responses:
@@ -106,3 +194,18 @@ def request_all_info_async(bbox, request_info, token):
         result_info.append({'category': key, 'count': len(val), 'items': val})
 
     return result_info
+
+
+def create_task_async(task):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        loop.ca
+    #     print(loop.is_running())
+    result = asyncio.run(task)
+    print(result)
+    return result

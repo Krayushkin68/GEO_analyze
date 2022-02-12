@@ -24,7 +24,8 @@
         inf_osm.save_to_json('data/map_osm.json')  
         inf_osm.draw_map('data/map_osm.png')  
       
-    inf_ya = Infrastructure(address='Люберцы, Барыкина 8', search_range=500, source=Infrastructure.sources.Yandex, token=TOKEN)  
+    inf_ya = Infrastructure(address='Люберцы, Барыкина 8', search_range=500, source=Infrastructure.sources.Yandex,
+    			token=TOKEN)  
     if inf_ya.analyze():  
         print(inf_ya.received_info)  
         inf_ya.save_to_json('data/map_ya.json')  

@@ -8,7 +8,7 @@
 ### - Save this information in osm(xml) and json formats
 ### - Obtain an image of the study area with infrastructure elements marked on it
 
-**Note.** To use the Yandex analyzer, you need to get an API token.
+**Note.** To use the Yandex analyzer, you need to get an API token [here](https://developer.tech.yandex.ru/services).
 
 
 ## Example

@@ -62,7 +62,7 @@ class YandexAnalyzer:
 
         self._bbox = get_bbox(self.lat, self.lon, self.search_range)
 
-        request_result = request_all_info(self._bbox, self.request_info, self._token)
+        request_result = request_all_info_async(self._bbox, self.request_info, self._token)
         if request_result:
             self.received_info = request_result
             return self.received_info

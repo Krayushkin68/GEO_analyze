@@ -5,13 +5,17 @@ from pygeoanalyze.osm_analyzer import OSMAnalyzer
 from pygeoanalyze.yandex_analyzer import YandexAnalyzer
 
 
-class Infrastructure:
-    def __init__(self, source, address=None, lat=None, lon=None, search_range=500, token=None):
-        if source == 'Yandex':
-            self.analyzer = YandexAnalyzer(token)
-        else:
-            self.analyzer = OSMAnalyzer()
+class Sources:
+    OSM = 'OSM'
+    Yandex = 'Yandex'
+    sources = [OSM, Yandex]
 
+
+class Infrastructure:
+    sources = Sources()
+
+    def __init__(self, source, address=None, lat=None, lon=None, search_range=500, token=None):
+        self.analyzer = self._set_source(source, token)
         if address:
             self.set_address(address)
         if lat and lon:
@@ -20,6 +24,17 @@ class Infrastructure:
             self.set_search_range(search_range)
 
         self.received_info = []
+
+    def _set_source(self, source, token):
+        if source == 'Yandex':
+            return YandexAnalyzer(token)
+        elif source in ('OSM', None):
+            return OSMAnalyzer()
+        else:
+            print(f'Requested source "{source}" is not availible.\n'
+                  f'Currently availible sources are: {self.sources.sources}\n'
+                  f'Setting default source: "OSM"')
+            return OSMAnalyzer()
 
     def set_address(self, address):
         self.analyzer.set_address(address)

@@ -8,7 +8,7 @@
 ### - Save this information in osm(xml) and json formats
 ### - Obtain an image of the study area with infrastructure elements marked on it
 
-**Note.** To use the Yandex analyzer, you need to get an API token.
+**Note.** To use the Yandex analyzer, you need to get an API token [here](https://developer.tech.yandex.ru/services/12/).
 
 
 ## Example
@@ -17,14 +17,15 @@
       
     TOKEN = json.load(open('token.json', 'rt')).get('TOKEN')  
       
-    inf_osm = Infrastructure(address='Люберцы, Барыкина 8', search_range=800, source='OSM')  
+    inf_osm = Infrastructure(address='Люберцы, Барыкина 8', search_range=800, source=Infrastructure.sources.OSM)  
     if inf_osm.analyze():  
         print(inf_osm.received_info)  
         inf_osm.save_to_xml('data/map_osm.xml')  
         inf_osm.save_to_json('data/map_osm.json')  
         inf_osm.draw_map('data/map_osm.png')  
       
-    inf_ya = Infrastructure(address='Люберцы, Барыкина 8', search_range=500, source='Yandex', token=TOKEN)  
+    inf_ya = Infrastructure(address='Люберцы, Барыкина 8', search_range=500, source=Infrastructure.sources.Yandex,
+    			token=TOKEN)  
     if inf_ya.analyze():  
         print(inf_ya.received_info)  
         inf_ya.save_to_json('data/map_ya.json')  

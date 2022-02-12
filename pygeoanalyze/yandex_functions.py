@@ -77,20 +77,23 @@ def get_valid_token(tokens):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         valid_tokens = asyncio.run(check_tokens(tokens))
     return valid_tokens
-    # tokens = [token] if isinstance(token, str) else token
-    # for token in tokens:
-    #     try:
-    #         url, params, headers = prepare_request(request_text='Тест', token=token, is_address_search=True)
-    #         response = requests.get(url, params=params, headers=headers)
-    #         data = response.json()
-    #         if data.get('message') and data.get('message') == 'Invalid key':
-    #             continue
-    #         else:
-    #             return token
-    #     except Exception:
-    #         continue
-    # else:
-    #     return False
+
+
+def get_first_valid_token(tokens):
+    tokens = [tokens] if isinstance(tokens, str) else tokens
+    for token in tokens:
+        try:
+            url, params, headers = prepare_request(request_text='Тест', token=token, is_address_search=True)
+            response = requests.get(url, params=params, headers=headers)
+            data = response.json()
+            if data.get('message') and data.get('message') == 'Invalid key':
+                continue
+            else:
+                return token
+        except Exception:
+            continue
+    else:
+        return False
 
 
 def get_coords_by_address(address, token, proxies):
@@ -194,18 +197,3 @@ def request_all_info_async(bbox, request_info, token, proxies):
         result_info.append({'category': key, 'count': len(val), 'items': val})
 
     return result_info
-
-
-def create_task_async(task):
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        loop.ca
-    #     print(loop.is_running())
-    result = asyncio.run(task)
-    print(result)
-    return result

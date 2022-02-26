@@ -5,3 +5,4 @@ beautifulsoup4~=4.10.0
 pycairo~=1.20.1
 aiohttp~=3.7.4.post0
 asyncio~=3.4.3
+fake-useragent~=0.1.11

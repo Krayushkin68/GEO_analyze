@@ -2,6 +2,7 @@ from math import cos
 
 import requests
 from bs4 import BeautifulSoup as Bs
+from fake_useragent import UserAgent
 
 from pygeoanalyze.yandex_functions import prepare_proxy
 
@@ -56,14 +57,14 @@ def select_nodes_by_tags(bs, tags):
 def request_overpass(bbox, item, proxies):
     query = create_query(bbox, list(item.values()))
     proxy = prepare_proxy(proxies, 'requests')
+    ua = UserAgent()
 
-    useragent = 'Krayushkin_OSM'
     headers = {
         'Connection': 'keep-alive',
         'sec-ch-ua': '"Google Chrome 80"',
         'Accept': '*/*',
         'Sec-Fetch-Dest': 'empty',
-        'User-Agent': useragent,
+        'User-Agent': ua.random,
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'Origin': 'https://overpass-turbo.eu',
         'Sec-Fetch-Site': 'cross-site',

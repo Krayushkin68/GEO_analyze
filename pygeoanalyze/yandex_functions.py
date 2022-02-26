@@ -4,6 +4,7 @@ from collections import defaultdict
 
 import aiohttp
 import requests
+from fake_useragent import UserAgent
 
 
 async def check_proxy(proxy, session):
@@ -134,7 +135,8 @@ def prepare_request(request_text, token, bbox=None, is_address_search=False):
             'results': 1,
             'lang': 'ru_RU'
         }
-    headers = {'user-agent': 'Krayushkin app'}
+    ua = UserAgent()
+    headers = {'user-agent': ua.random}
     return url, params, headers
 
 

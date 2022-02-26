@@ -1,5 +1,4 @@
 .idea/
 __pycache__/
 data/
-token.json
-data.json
+tokens.json

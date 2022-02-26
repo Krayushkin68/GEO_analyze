@@ -2,7 +2,7 @@ import json
 
 from pygeoanalyze import Infrastructure
 
-TOKENS = json.load(open('token.json', 'rt')).get('TOKEN')
+TOKENS = json.load(open('token.json', 'rt')).get('TOKENS')
 # Valid values: TOKENS = 'some_token' or TOKENS = ['some_token_1', some_token_2, ...]
 
 # EXAMPLE 1

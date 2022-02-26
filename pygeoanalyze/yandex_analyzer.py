@@ -1,5 +1,3 @@
-import random
-
 from pygeoanalyze.draw_map import draw
 from pygeoanalyze.osm_functions import get_bbox
 from pygeoanalyze.yandex_functions import *
@@ -53,6 +51,11 @@ class YandexAnalyzer:
             self._proxies.append(proxies)
         elif isinstance(proxies, list):
             self._proxies.extend(proxies)
+
+    def check_tokens(self):
+        valid_tokens = get_valid_token(self._token)
+        print(f'Valid tokens: {len(valid_tokens)} / {len(self._token)}')
+        return valid_tokens
 
     def analyze(self):
         if not (self.address or (self.lat and self.lon)):
